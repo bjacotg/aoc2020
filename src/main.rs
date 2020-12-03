@@ -1,6 +1,9 @@
 use std::{cmp::Ordering, fs};
+use regex::Regex;
+
 fn main() {
     println!("Day 1: {}", solve_1());
+    println!("Day 2: {}", solve_2());
 }
 
 fn solve_1() -> String {
@@ -36,4 +39,40 @@ fn solve_1() -> String {
     };
 
     format!("{:?} {:?}", part1, part2)
+}
+
+fn solve_2() -> String {
+    let contents = fs::read_to_string("input/2.txt").expect("Unable to read file");
+    let re = Regex::new(r"^(\d+)-(\d+) ([a-z]): ([a-z]+)$").expect("Bad regex");
+    struct Lines{
+        min:i32,
+        max: i32, 
+        ch: char,
+        pass: String
+    };
+    let parse_line = |line|{
+        let cap = re.captures(line).expect("Line did not match");
+        Lines{
+            min: cap[1].parse::<i32>().unwrap(),
+            max: cap[2].parse::<i32>().unwrap(),
+            ch: cap[3].chars().next().unwrap(),
+            pass: cap[4].to_string(),
+        }
+    };
+
+    let parsed_lines :Vec<_>= contents.lines().map(&parse_line).collect();
+
+    let part1 = parsed_lines.iter().filter(|line|{
+        let count = line.pass.chars().filter(|c| *c == line.ch).count() as i32;
+        line.min <= count && count <= line.max
+    }).count();
+
+    let part2 = parsed_lines.iter().filter(|line|{
+        let first = line.pass.chars().nth(line.min as usize - 1).unwrap();
+        let second = line.pass.chars().nth(line.max as usize - 1).unwrap();
+        (first == line.ch) != (second == line.ch)
+    }).count();
+
+
+    format!("{} {}", part1,part2) 
 }
