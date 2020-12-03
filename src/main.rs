@@ -1,9 +1,10 @@
-use std::{cmp::Ordering, fs};
 use regex::Regex;
+use std::{cmp::Ordering, fs};
 
 fn main() {
     println!("Day 1: {}", solve_1());
     println!("Day 2: {}", solve_2());
+    println!("Day 3: {}", solve_3());
 }
 
 fn solve_1() -> String {
@@ -44,15 +45,15 @@ fn solve_1() -> String {
 fn solve_2() -> String {
     let contents = fs::read_to_string("input/2.txt").expect("Unable to read file");
     let re = Regex::new(r"^(\d+)-(\d+) ([a-z]): ([a-z]+)$").expect("Bad regex");
-    struct Lines{
-        min:i32,
-        max: i32, 
+    struct Lines {
+        min: i32,
+        max: i32,
         ch: char,
-        pass: String
+        pass: String,
     };
-    let parse_line = |line|{
+    let parse_line = |line| {
         let cap = re.captures(line).expect("Line did not match");
-        Lines{
+        Lines {
             min: cap[1].parse::<i32>().unwrap(),
             max: cap[2].parse::<i32>().unwrap(),
             ch: cap[3].chars().next().unwrap(),
@@ -60,19 +61,47 @@ fn solve_2() -> String {
         }
     };
 
-    let parsed_lines :Vec<_>= contents.lines().map(&parse_line).collect();
+    let parsed_lines: Vec<_> = contents.lines().map(&parse_line).collect();
 
-    let part1 = parsed_lines.iter().filter(|line|{
-        let count = line.pass.chars().filter(|c| *c == line.ch).count() as i32;
-        line.min <= count && count <= line.max
-    }).count();
+    let part1 = parsed_lines
+        .iter()
+        .filter(|line| {
+            let count = line.pass.chars().filter(|c| *c == line.ch).count() as i32;
+            line.min <= count && count <= line.max
+        })
+        .count();
 
-    let part2 = parsed_lines.iter().filter(|line|{
-        let first = line.pass.chars().nth(line.min as usize - 1).unwrap();
-        let second = line.pass.chars().nth(line.max as usize - 1).unwrap();
-        (first == line.ch) != (second == line.ch)
-    }).count();
+    let part2 = parsed_lines
+        .iter()
+        .filter(|line| {
+            let first = line.pass.chars().nth(line.min as usize - 1).unwrap();
+            let second = line.pass.chars().nth(line.max as usize - 1).unwrap();
+            (first == line.ch) != (second == line.ch)
+        })
+        .count();
 
+    format!("{} {}", part1, part2)
+}
 
-    format!("{} {}", part1,part2) 
+fn solve_3() -> String {
+    let contents = fs::read_to_string("input/3.txt").expect("Unable to read file");
+    let trees_on_path = |down: usize, right: usize| {
+        contents
+            .lines()
+            .enumerate()
+            .filter(|(nb, line)| {
+                let position = (right * nb / down) % line.len();
+                nb % down == 0 && line.chars().nth(position).unwrap() == '#'
+            })
+            .count()
+    };
+
+    let part1 = trees_on_path(1, 3);
+    let part2 = trees_on_path(1, 1)
+        * trees_on_path(1, 3)
+        * trees_on_path(1, 5)
+        * trees_on_path(1, 7)
+        * trees_on_path(2, 1);
+
+    format!("{} {}", part1, part2)
 }
