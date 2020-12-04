@@ -1,10 +1,12 @@
 use regex::Regex;
+use std::collections::HashMap;
 use std::{cmp::Ordering, fs};
 
 fn main() {
     println!("Day 1: {}", solve_1());
     println!("Day 2: {}", solve_2());
     println!("Day 3: {}", solve_3());
+    println!("Day 4: {}", solve_4());
 }
 
 fn solve_1() -> String {
@@ -102,6 +104,82 @@ fn solve_3() -> String {
         * trees_on_path(1, 5)
         * trees_on_path(1, 7)
         * trees_on_path(2, 1);
+
+    format!("{} {}", part1, part2)
+}
+
+fn solve_4() -> String {
+    let contents = fs::read_to_string("input/4.txt").expect("Unable to read file");
+    let necessary_tags = ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"];
+    type Passport<'a> = HashMap<&'a str, &'a str>;
+    let passports: Vec<_> = contents
+        .split("\n\n")
+        .map(|raw_passport| {
+            raw_passport
+                .split_whitespace()
+                .map(|token| (&token[0..3], &token[4..]))
+                .collect::<Passport>()
+        })
+        .collect();
+    let part1 = passports
+        .iter()
+        .filter(|passport| necessary_tags.iter().all(|tag| passport.contains_key(tag)))
+        .count();
+
+    let part2 = passports
+        .iter()
+        .filter(|passport: &&Passport| {
+            let check_date = |tag, min, max| {
+                passport
+                    .get(tag)
+                    .and_then(|val| val.parse::<i32>().ok())
+                    .map(|val| min <= val && val <= max)
+                    .unwrap_or(false)
+            };
+            let byr_correct = check_date("byr", 1920, 2002);
+            let iyr_correct = check_date("iyr", 2010, 2020);
+            let eyr_correct = check_date("eyr", 2020, 2030);
+            let hgt_correct = {
+                let check_height = |height: &str, unit: &str, min: i32, max: i32| {
+                    height
+                        .strip_suffix(unit)
+                        .and_then(|h| h.parse::<i32>().ok())
+                        .map(|h| min <= h && h <= max)
+                        .unwrap_or(false)
+                };
+                passport
+                    .get("hgt")
+                    .map(|h| check_height(h, "cm", 150, 193) || check_height(h, "in", 59, 76))
+                    .unwrap_or(false)
+            };
+
+            let hair_regex = Regex::new(r"^#[0-9a-f]{6}$").expect("Cannot parse hair regex");
+            let hcl_correct = passport
+                .get("hcl")
+                .map(|h| hair_regex.is_match(h))
+                .unwrap_or(false);
+
+            let possible_eye = ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"];
+            let ecl_correct = passport
+                .get("ecl")
+                .map(|e| possible_eye.contains(e))
+                .unwrap_or(false);
+
+            let passport_id = Regex::new(r"^[0-9]{9}$").expect("Cannot parse passport regex");
+            let pid_correct = passport
+                .get("pid")
+                .map(|p| passport_id.is_match(p))
+                .unwrap_or(false);
+
+            byr_correct
+                && iyr_correct
+                && eyr_correct
+                && hgt_correct
+                && hcl_correct
+                && ecl_correct
+                && pid_correct
+        })
+        .count();
 
     format!("{} {}", part1, part2)
 }
