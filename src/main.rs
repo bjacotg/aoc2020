@@ -126,6 +126,8 @@ fn solve_4() -> String {
         .filter(|passport| necessary_tags.iter().all(|tag| passport.contains_key(tag)))
         .count();
 
+    let hair_regex = Regex::new(r"^#[0-9a-f]{6}$").expect("Cannot parse hair regex");
+    let passport_id = Regex::new(r"^[0-9]{9}$").expect("Cannot parse passport regex");
     let part2 = passports
         .iter()
         .filter(|passport: &&Passport| {
@@ -153,7 +155,6 @@ fn solve_4() -> String {
                     .unwrap_or(false)
             };
 
-            let hair_regex = Regex::new(r"^#[0-9a-f]{6}$").expect("Cannot parse hair regex");
             let hcl_correct = passport
                 .get("hcl")
                 .map(|h| hair_regex.is_match(h))
@@ -165,7 +166,6 @@ fn solve_4() -> String {
                 .map(|e| possible_eye.contains(e))
                 .unwrap_or(false);
 
-            let passport_id = Regex::new(r"^[0-9]{9}$").expect("Cannot parse passport regex");
             let pid_correct = passport
                 .get("pid")
                 .map(|p| passport_id.is_match(p))
