@@ -7,6 +7,7 @@ fn main() {
     println!("Day 2: {}", solve_2());
     println!("Day 3: {}", solve_3());
     println!("Day 4: {}", solve_4());
+    println!("Day 5: {}", solve_5());
 }
 
 fn solve_1() -> String {
@@ -180,6 +181,23 @@ fn solve_4() -> String {
                 && pid_correct
         })
         .count();
+
+    format!("{} {}", part1, part2)
+}
+fn solve_5() -> String {
+    let contents = fs::read_to_string("input/5.txt").expect("Unable to read file");
+    let parse_seat = |seat: &str|{
+        seat.chars().fold(0, |acc, x| if x == 'R' || x == 'B' {2* acc + 1} else {2 * acc})
+
+    };
+    let seat_code : Vec<_>= contents.lines().map(&parse_seat).collect();
+    let part1 = seat_code.iter().max().unwrap();
+    let part2 = {
+        let max = *seat_code.iter().max().unwrap();
+        let min = *seat_code.iter().min().unwrap();
+        let sum :i32 = seat_code.iter().sum();
+        max * (max + 1) / 2 - sum - min * (min - 1) / 2
+    };
 
     format!("{} {}", part1, part2)
 }
