@@ -1,5 +1,6 @@
 use regex::Regex;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::{cmp::Ordering, fs};
 
 fn main() {
@@ -8,6 +9,7 @@ fn main() {
     println!("Day 3: {}", solve_3());
     println!("Day 4: {}", solve_4());
     println!("Day 5: {}", solve_5());
+    println!("Day 6: {}", solve_6());
 }
 
 fn solve_1() -> String {
@@ -186,18 +188,62 @@ fn solve_4() -> String {
 }
 fn solve_5() -> String {
     let contents = fs::read_to_string("input/5.txt").expect("Unable to read file");
-    let parse_seat = |seat: &str|{
-        seat.chars().fold(0, |acc, x| if x == 'R' || x == 'B' {2* acc + 1} else {2 * acc})
-
+    let parse_seat = |seat: &str| {
+        seat.chars().fold(0, |acc, x| {
+            if x == 'R' || x == 'B' {
+                2 * acc + 1
+            } else {
+                2 * acc
+            }
+        })
     };
-    let seat_code : Vec<_>= contents.lines().map(&parse_seat).collect();
+    let seat_code: Vec<_> = contents.lines().map(&parse_seat).collect();
     let part1 = seat_code.iter().max().unwrap();
     let part2 = {
         let max = *seat_code.iter().max().unwrap();
         let min = *seat_code.iter().min().unwrap();
-        let sum :i32 = seat_code.iter().sum();
+        let sum: i32 = seat_code.iter().sum();
         max * (max + 1) / 2 - sum - min * (min - 1) / 2
     };
+
+    format!("{} {}", part1, part2)
+}
+
+fn solve_6() -> String {
+    let contents = fs::read_to_string("input/6.txt").expect("Unable to read file");
+    type Questions = HashSet<char>;
+    type Group = Vec<Questions>;
+    let groups: Vec<_> = contents
+        .split("\n\n")
+        .map(|g| {
+            g.lines()
+                .map(|q| q.chars().collect::<Questions>())
+                .collect::<Group>()
+        })
+        .collect();
+
+    let part1: i32 = groups
+        .iter()
+        .map(|g| {
+            g.iter()
+                .fold(Questions::new(), |acc, next| {
+                    acc.union(&next).copied().collect::<Questions>()
+                })
+                .len() as i32
+        })
+        .sum();
+        
+    let all = "qwertyuioplkjhgfdsazxcvbnm".chars().collect::<Questions>();
+    let part2: i32 = groups
+        .iter()
+        .map(|g| {
+            g.iter()
+                .fold(all.clone(), |acc, next| {
+                    acc.intersection(&next).copied().collect::<Questions>()
+                })
+                .len() as i32
+        })
+        .sum();
 
     format!("{} {}", part1, part2)
 }
